@@ -9,8 +9,14 @@ var Game = (function () {
         future: {},
         past: {},
         arrowOfTime: 1,
-        gameTick: 0
+        gameTick: 0,
+        resources: {}
     };
+
+    instance.initialize = function () {
+        this.resources["sunshine"] = 0;
+        this.resources["grass"] = 0;
+    }
 
     instance.update_frame = function (time) {
         var delta = time - Game.lastUpdateTime;
@@ -26,6 +32,24 @@ var Game = (function () {
     instance.update = function () {
         document.getElementById('tick').innerHTML = "Time: " + Math.round(this.gameTick) + (Game.arrowOfTime == 1 ? " >>>" : " <<<");
 
+        // Past events
+        document.getElementById('past').innerHTML = "Past actions:";
+        for (var name in this.past) {
+            var data = this.past[name];
+            document.getElementById('past').innerHTML += "<br>" + data.d + ": " + name;
+            if (this.gameTick < data.d && Game.arrowOfTime == Game.TOTHEPAST) {
+                console.debug(this.gameTick + ": Time to " + name + "!")
+                data.c(name, this, data.d);
+            }
+        }
+
+        // Current state
+        document.getElementById('now').innerHTML = "Now:";
+        for (var name in this.resources) {
+            var data = this.resources[name];
+            document.getElementById('now').innerHTML += "<br>" + name + ": " + data;
+        }
+
         // Future events
         document.getElementById('future').innerHTML = "Future actions:";
         for (var name in this.future) {
@@ -37,27 +61,18 @@ var Game = (function () {
             }
         }
 
-        // Past events
-        document.getElementById('past').innerHTML = "Past actions:";
-        for (var name in this.past) {
-            var data = this.past[name];
-            document.getElementById('past').innerHTML += "<br>" + data.d + ": " + name;
-            if (this.gameTick < data.d && Game.arrowOfTime == Game.TOTHEPAST) {
-                console.debug(this.gameTick + ": Time to " + name + "!")
-                data.c(name, this, data.d);
-            }
-        }
     };
 
     instance.scheduleEvent = function (name, callback, gameTime) {
-        if (gameTime > 0) {
-            if (this.arrowOfTime == 1) {
-                if (this.future.) this.future = this.future.filter(name);
+        if (this.arrowOfTime == 1) {
+            if (typeof this.future[name] !== 'undefined') this.past[name] = this.future[name];
+            this.future[name] = { c: callback, d: gameTime, e: 0 };
+        } else if (this.arrowOfTime == -1) {
+            if (typeof this.past[name] !== 'undefined') this.future[name] = this.past[name];
+            if (gameTime >= 0)
                 this.past[name] = { c: callback, d: gameTime, e: 0 };
-            } else if (this.arrowOfTime == -1) {
-                this.past = this.past.filter(function (e) { return e[name] !== name; });
-                this.future[name] = { c: callback, d: gameTime, e: 0 };
-            }
+            else
+                delete this.past[name];
         }
 
     }
@@ -68,6 +83,8 @@ var Game = (function () {
 
     instance.start = function () {
         console.debug("Loading Game");
+        this.initialize();
+
         //this.createInterval("Loading Animation", this.loadAnimation, 10);
         //this.createInterval("Loading", this.loadDelay, 1000);
 
@@ -78,7 +95,7 @@ var Game = (function () {
 }());
 
 window.onload = function () {
-    Game.scheduleEvent("Do something", Test.something, 1000);
-    Game.scheduleEvent("Do something else", Test.somethingElse, 500);
+    Game.scheduleEvent("sun shine", Test.sunShine, 450);
+    Game.scheduleEvent("grow grass", Test.growGrass, 1000);
     Game.start();
 };
