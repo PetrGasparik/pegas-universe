@@ -8,6 +8,8 @@
         "url": "https://github.com/PetrGasparik/pegas-universe.git"
     },
     "dependencies": {
-        "phaser": "^3.24.1"
+        "phaser": "^3.24.1",
+        "phaser3-project-template": "^1.0.9",
+        "webpack": "^5.6.0"
     }
 }
